@@ -12,7 +12,7 @@ from flask_jwt_extended import JWTManager
 app = Flask(__name__)
 
 
-app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
+app.config["JWT_SECRET_KEY"] = "super-secret"  
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite://"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['PROPAGATE_EXCEPTIONS'] = True
@@ -26,22 +26,18 @@ class User(db.Model):
     username = db.Column(db.Text, nullable=False, unique=True)
     full_name = db.Column(db.Text, nullable=False)
 
-    # NOTE: In a real application make sure to properly hash and salt passwords
+    
     def check_password(self, password):
         return compare_digest(password, "123456")
 
 
-# Register a callback function that takes whatever object is passed in as the
-# identity when creating JWTs and converts it to a JSON serializable format.
+
 @jwt.user_identity_loader
 def user_identity_lookup(user):
     return user.id
 
 
-# Register a callback function that loades a user from your database whenever
-# a protected route is accessed. This should return any python object on a
-# successful lookup, or None if the lookup failed for any reason (for example
-# if the user has been deleted from the database).
+
 @jwt.user_lookup_loader
 def user_lookup_callback(_jwt_header, jwt_data):
     identity = jwt_data["sub"]
@@ -57,7 +53,7 @@ def login():
     if not user or not user.check_password(password):
         return jsonify("Wrong username or password"), 401
 
-    # Notice that we are passing in the actual sqlalchemy user object here
+    
     access_token = create_access_token(identity=user)
     return jsonify(access_token=access_token)
 
@@ -65,7 +61,7 @@ def login():
 @app.route("/who_am_i", methods=["GET"])
 @jwt_required()
 def protected():
-    # We can now access our sqlalchemy User object via `current_user`.
+   
     return jsonify(
         id=current_user.id,
         full_name=current_user.full_name,
@@ -82,21 +78,18 @@ def add_user():
         _json = request.json
         name = _json['name']
         studentID = _json['stuid']
-#        _password = _json['pwd']
-        # validate the received values
+
         if name and studentID and request.method == 'POST'  :
-            #do not save password as a plain text
-#            _hashed_password = generate_password_hash(_password)
-            # save edits
+
             sql = "INSERT INTO apiuser(user_name, user_stuid) VALUES(%s, %s)"
             data = (name, studentID)
             conn = mysql.connect()
             cursor = conn.cursor()
             cursor.execute(sql, data)
             conn.commit()
-#            cursor,conn =con(mysql,sql,data)
+
             resp = jsonify('User added successfully!')
-    #        resp.status_code = 200
+
             cursor.close() 
             conn.close()
             return resp
@@ -153,11 +146,9 @@ def update_user(id):
         name = _json['name']
         studentID = _json['stuid']
         
-        # validate the received values
+
         if name and studentID and request.method == 'PUT':
-            #do not save password as a plain text
-#            _hashed_password = generate_password_hash(_password)
-            # save edits
+
             sql = "UPDATE apiuser SET user_name=%s, user_stuid=%s WHERE user_id=%s"
             data = (name,studentID, id)
             conn = mysql.connect()
@@ -165,9 +156,8 @@ def update_user(id):
             cursor.execute(sql, data)
             conn.commit()
 
-#            cursor,conn =con(mysql,sql,data)
             resp = jsonify('User updated successfully!')
-#            resp.status_code = 200
+
             cursor.close() 
             conn.close()
             return resp
